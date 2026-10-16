@@ -1,0 +1,55 @@
+# Copier configuration for the rlp Python FastAPI template.
+# Render with: rlp new gh:rdlucas2/rlp-template-python-fastapi <dir>
+_min_copier_version: "9.4.0"
+_subdirectory: template
+_answers_file: .copier-answers.yml
+
+project_id:
+  type: str
+  help: Project id (lowercase letters, digits and hyphens). Used as metadata.name, metadata.project and the Python distribution name.
+  default: hello-api
+  validator: >-
+    {% if not (project_id | regex_search('^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$')) %}
+    Use lowercase letters, digits and hyphens, starting with a letter and not ending with a hyphen.
+    {% endif %}
+
+component_name:
+  type: str
+  help: Name of the service component in rlp.yaml.
+  default: api
+  validator: >-
+    {% if not (component_name | regex_search('^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$')) %}
+    Use lowercase letters, digits and hyphens, starting with a letter and not ending with a hyphen.
+    {% endif %}
+
+python_version:
+  type: str
+  help: Python version for the container image and local tooling.
+  choices:
+    - "3.13"
+    - "3.12"
+  default: "3.13"
+
+port:
+  type: int
+  help: Port the service listens on.
+  default: 8000
+  validator: >-
+    {% if port < 1024 or port > 65535 %}
+    Use a port from 1024 to 65535; the container runs as a non-root user.
+    {% endif %}
+
+coverage_minimum:
+  type: int
+  help: Minimum line coverage in percent (quality.coverage.minimum). The platform floor is 70.
+  default: 80
+  validator: >-
+    {% if coverage_minimum < 70 or coverage_minimum > 100 %}
+    Use a value from 70 (the platform floor) to 100.
+    {% endif %}
+
+# Derived, never asked.
+package_name:
+  type: str
+  default: "{{ project_id | replace('-', '_') }}"
+  when: false

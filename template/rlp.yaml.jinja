@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/rdlucas2/rlp/main/schemas/v1alpha1/repo.schema.json
+apiVersion: rlp/v1alpha1
+kind: Repo
+metadata:
+  name: {{ project_id }}
+  project: {{ project_id }}
+  description: FastAPI service rendered from the rlp python-fastapi template.
+  template:
+    source: "{{ _copier_answers._src_path }}"
+{%- if _copier_answers._commit %}
+    version: "{{ _copier_answers._commit }}"
+{%- endif %}
+components:
+  - name: {{ component_name }}
+    path: .
+    language: python
+    artifact:
+      kind: container-image
+      dockerfile: Dockerfile
+    runtime:
+      kind: container-service
+      port: {{ port }}
+      health:
+        liveness: /healthz
+        readiness: /readyz
+    # Every verb runs `task <name>` (Taskfile.yml) unless overridden here.
+    verbs: {}
+    reports:
+      junit: reports/junit.xml
+      coverage:
+        format: cobertura
+        path: reports/coverage.xml
+    config:
+      - name: PORT
+        description: Port the service listens on.
+        default: "{{ port }}"
+      - name: LOG_LEVEL
+        description: Log level for the JSON logger (debug, info, warning, error, critical).
+        default: info
+      - name: DATABASE_URL
+        description: Connection string for the sample Postgres service; /readyz checks it is reachable when set.
+        from: service:db
+    services:
+      - name: db
+        kind: postgres
+        version: "17"
+    telemetry:
+      enabled: true
+      serviceName: {{ project_id }}-{{ component_name }}
+quality:
+  coverage:
+    minimum: {{ coverage_minimum }}

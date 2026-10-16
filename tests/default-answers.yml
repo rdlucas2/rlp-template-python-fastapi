@@ -1,0 +1,6 @@
+# Answers the conformance loop renders the template with (rlp-template.yaml conformance.answers).
+project_id: hello-api
+component_name: api
+python_version: "3.13"
+port: 8000
+coverage_minimum: 80

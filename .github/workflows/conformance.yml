@@ -1,0 +1,32 @@
+# Certifies this template with rlp's template conformance: render it with
+# tests/default-answers.yml, run the golden gates on the rendered repo, then
+# rlp run, rlp smoke and rlp down. A v* tag gets a GitHub Release, with the
+# conformance report attached, only when certify passed: that release is the
+# certification marker. See https://github.com/rdlucas2/rlp/blob/main/docs/conformance.md
+name: conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  schedule:
+    - cron: "17 6 * * 1"  # Mondays 06:17 UTC: catch new CVEs in the rendered repo
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: conformance-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  conformance:
+    # Pin both the workflow and the CLI to the same rlp commit.
+    uses: rdlucas2/rlp/.github/workflows/template-conformance.yml@248c001e164632d6712eb0a2216bcc11429787f9
+    with:
+      rlp-version: "git:248c001e164632d6712eb0a2216bcc11429787f9"
+      release: true
+    permissions:
+      contents: write  # release: publish the GitHub Release of a certified tag

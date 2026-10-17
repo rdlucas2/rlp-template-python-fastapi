@@ -42,6 +42,26 @@ Questions (see `copier.yml`):
 - `rlp-template.yaml`: the template contract, checked by `rlp validate` and `rlp policy check`.
 - `tests/default-answers.yml`: the answers the conformance loop renders with.
 
+- `.github/workflows/conformance.yml`: certifies the template on every PR, on `main`, on `v*` tags and weekly (see below).
+
+## Releases are certified
+
+A release of this template is a GitHub Release, and only a certified commit gets one. `.github/workflows/conformance.yml` calls rlp's reusable [`template-conformance.yml`](https://github.com/rdlucas2/rlp/blob/main/docs/conformance.md), pinned to an rlp commit, which runs `rlp template certify`:
+
+1. Validate `rlp-template.yaml` and render the template with `tests/default-answers.yml`.
+2. Run the golden-pipeline gates on the rendered repo (pre-commit, policy, tests and coverage, SAST, secrets, package, Trivy); deploy is not part of certification.
+3. Run `build`, then `rlp run`, `rlp smoke` and `rlp down` on the rendered repo.
+
+The `conformance / certify` check runs on every PR and on `main`, and weekly so new CVEs in the rendered repo's dependencies or base image show up without a code change. A PR that breaks a verb, drops coverage below the minimum or adds a vulnerable dependency fails it. The conformance report is uploaded as the `rlp-conformance-report` artifact and summarised on the run page.
+
+To release, bump `metadata.version` in `rlp-template.yaml`, merge, and push a matching tag from `main`:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+On a `v*` tag, the `conformance / release` job runs only after certify passed, checks that the report says `certified`, and publishes the tag's GitHub Release with `conformance.json` attached. A tag that fails certification gets no release. To certify against a newer rlp, update both pinned SHAs in `conformance.yml` together.
+
 `uv.lock` is rendered from `template/uv.lock.jinja`; only the project name is templated. To change dependencies, render the template, edit `pyproject.toml`, run `uv lock`, and copy the result back, replacing the project name with `{{ project_id }}`.
 
 In `template/Dockerfile.jinja`, template variables are written without spaces (`{{port}}`), so `rlp policy check` can still parse the file in this repo.

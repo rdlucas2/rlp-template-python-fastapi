@@ -22,6 +22,7 @@ produces:
     - .copier-answers.yml
     - .pre-commit-config.yaml
     - .github/workflows/pipeline.yml
+    - .github/CODEOWNERS
     - pyproject.toml
     - uv.lock
 requires:

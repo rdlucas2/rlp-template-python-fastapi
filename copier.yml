@@ -48,6 +48,20 @@ coverage_minimum:
     Use a value from 70 (the platform floor) to 100.
     {% endif %}
 
+code_owners:
+  type: str
+  help: >-
+    Who reviews gate changes, written to .github/CODEOWNERS: GitHub users
+    (@user) or teams (@org/team), separated by spaces.
+  default: "@rdlucas2"
+  validator: >-
+    {% set owner = '^@[A-Za-z0-9][A-Za-z0-9-]*(/[A-Za-z0-9][A-Za-z0-9_.-]*)?$' %}
+    {% set ns = namespace(ok=code_owners.split() | length > 0) %}
+    {% for o in code_owners.split() %}{% if not (o | regex_search(owner)) %}{% set ns.ok = false %}{% endif %}{% endfor %}
+    {% if not ns.ok %}
+    Use GitHub users (@user) or teams (@org/team), separated by spaces.
+    {% endif %}
+
 # Derived, never asked.
 package_name:
   type: str

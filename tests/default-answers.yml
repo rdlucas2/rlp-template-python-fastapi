@@ -4,3 +4,4 @@ component_name: api
 python_version: "3.13"
 port: 8000
 coverage_minimum: 80
+code_owners: "@rdlucas2"

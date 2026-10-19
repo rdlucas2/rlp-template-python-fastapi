@@ -21,6 +21,7 @@ Questions (see `copier.yml`):
 | `python_version` | `3.13` | `3.13` or `3.12`: the image base and `.python-version` |
 | `port` | `8000` | Port the service listens on |
 | `coverage_minimum` | `80` | `quality.coverage.minimum`; 70 (the platform floor) to 100 |
+| `code_owners` | `@rdlucas2` | Who reviews gate changes: GitHub users or teams, space-separated, written to `.github/CODEOWNERS` |
 
 ## What a rendered repo contains
 
@@ -33,7 +34,8 @@ Questions (see `copier.yml`):
 | `tests/` | pytest with JUnit XML and Cobertura coverage written to the paths `rlp.yaml` declares |
 | `Dockerfile` | Multi-stage build on a pinned `python:<version>-slim` base, running as a non-root user |
 | `.pre-commit-config.yaml`, `.yamllint.yaml`, `.editorconfig` | The rlp conventions |
-| `.github/workflows/pipeline.yml` | Calls the rlp golden pipeline, pinned to an rlp commit |
+| `.github/workflows/pipeline.yml` | Calls the rlp golden pipeline, pinned to an rlp commit; runs on pull requests and on pull request reviews, so golden's `gate-review` re-checks when a review lands |
+| `.github/CODEOWNERS` | Routes a change to a gate file (the paths the `rlp.agent` rules protect) to the `code_owners` for review |
 | `.copier-answers.yml` | Lets `rlp update` move the repo to a newer template version |
 
 ## This repo

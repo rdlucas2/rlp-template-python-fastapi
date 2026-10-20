@@ -45,6 +45,8 @@ Questions (see `copier.yml`):
 - `tests/default-answers.yml`: the answers the conformance loop renders with.
 
 - `.github/workflows/conformance.yml`: certifies the template on every PR, on `main`, on `v*` tags and weekly (see below).
+- `.github/workflows/gate-review.yml`: rlp's `gate-review` check on every PR and PR review. An agent-authored PR (labelled `agent:authored`, or opened by an rlp agent account) that changes a gate file stays pending until a human who is neither its author nor an agent approves its head commit; any other PR passes. A gate file is one the `rlp.agent` rules flag or one `.github/CODEOWNERS` lists; `.github/scripts/gate_changes.py` collects them for `rlp pipeline gate-review`. It pins its own rlp commit, since `conformance.yml`'s is older than `gate-review`.
+- `.github/CODEOWNERS`: this repo's gate files (workflows, lint settings, certification inputs, and the gates the template renders under `template/`), owned by `@rdlucas2`.
 
 ## Releases are certified
 

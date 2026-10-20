@@ -1,0 +1,32 @@
+# Gate files of this template repo: a change to any of these needs Ryan's
+# review (rdlucas2/rlp#88).
+#
+# The gate-review workflow holds an agent-authored pull request that changes a
+# path listed here, or that the rlp.agent rules flag, until a human who is not
+# the PR author approves its head commit (.github/scripts/gate_changes.py reads
+# this file). CODEOWNERS routes that review; it blocks a merge only once
+# "Require review from Code Owners" is on for main.
+
+# Workflows, the gate-review script and CODEOWNERS itself
+/.github/                           @rdlucas2
+
+# This repo's lint settings
+/.pre-commit-config.yaml            @rdlucas2
+/.yamllint.yaml                     @rdlucas2
+
+# Certification: the conformance answers, the verbs certify runs, the questions
+# (coverage_minimum's range)
+/tests/                             @rdlucas2
+/rlp-template.yaml                  @rdlucas2
+/copier.yml                         @rdlucas2
+
+# The gates the template renders: pipeline and CODEOWNERS, pre-commit and lint
+# settings, the contract (quality block, verbs), ruff/pytest/coverage settings
+# and the tests
+/template/.github/                  @rdlucas2
+/template/.pre-commit-config.yaml   @rdlucas2
+/template/.yamllint.yaml            @rdlucas2
+/template/rlp.yaml.jinja            @rdlucas2
+/template/Taskfile.yml.jinja        @rdlucas2
+/template/pyproject.toml.jinja      @rdlucas2
+/template/tests/                    @rdlucas2

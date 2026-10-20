@@ -1,0 +1,59 @@
+# Holds an agent-authored pull request that changes a gate file of this template
+# until a human who is neither its author nor an agent approves its head commit
+# (rdlucas2/rlp#88). It is rlp's gate-review check, as the golden pipeline runs
+# it, fed by .github/scripts/gate_changes.py instead of golden's policy stage:
+# this repo is a template, not an rlp project. A gate file is one the rlp.agent
+# rules flag or one .github/CODEOWNERS lists. A change that touches no gate
+# file, or isn't agent-authored, passes. Make `gate-review` a required check
+# on main to enforce it.
+name: gate-review
+
+on:
+  pull_request:
+    # labeled and unlabeled: the agent:authored label decides whether the
+    # rules apply, and a PR is often labelled after it opens.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted, dismissed]  # re-check on each review
+
+permissions:
+  contents: read
+
+jobs:
+  gate-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read  # list the PR's reviews
+    defaults:
+      run:
+        shell: bash
+    env:
+      # An rlp commit with `rlp pipeline gate-review`. conformance.yml pins an
+      # older one; move both to one commit the next time conformance.yml moves.
+      RLP_SPEC: "git:c48d669fe7ab37e30e680a145212404fc6236c87"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0  # the diff against the PR's base commit
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Install rlp
+        run: |
+          python -m pip install --disable-pip-version-check "rlp-cli @ git+https://github.com/rdlucas2/rlp@${RLP_SPEC#git:}"
+          rlp --version
+      - name: Gate changes
+        env:
+          RLP_BASELINE: ${{ github.event.pull_request.base.sha }}
+        run: python .github/scripts/gate_changes.py --results "$RUNNER_TEMP/rlp-gate-results/results.json"
+      - name: gate-review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          rlp pipeline gate-review --results "$RUNNER_TEMP/rlp-gate-results/results.json" > "$RUNNER_TEMP/gate-review.md"
+          code=$?
+          set -e
+          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/gate-review.md"
+          exit "$code"

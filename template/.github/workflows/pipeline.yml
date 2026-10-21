@@ -1,5 +1,17 @@
 # Runs the rlp golden pipeline: every gate, then publishing on main and tags.
 # The gate logic lives in rlp itself; see https://github.com/rdlucas2/rlp/blob/main/docs/pipeline.md
+#
+# Deploying is off until these repo variables are set (rlp's docs/aws.md):
+#   RLP_DEPLOY_ENV            environment to deploy to, for example dev
+#   RLP_AWS_REGION            region of the environment (default us-east-1)
+#   RLP_AWS_PLAN_ROLE_ARN     bootstrap output plan_role_arn
+#   RLP_AWS_DEPLOY_ROLE_ARN   bootstrap output deploy_role_arn
+#   RLP_TF_STATE_BUCKET       bootstrap output state_bucket
+#
+# Reporting to the rlp platform is off until these are set (rlp's docs/pipeline.md):
+#   RLP_PLATFORM_URL          variable: the platform's URL (the load balancer's, without DNS)
+#   RLP_PLATFORM_HOST         variable, optional: its host, when the URL is the load balancer's
+#   RLP_PLATFORM_TOKEN        secret: the platform's RLP_API_TOKEN
 name: pipeline
 
 on:
@@ -12,6 +24,14 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  # The rlp platform's retirement workflow tears an environment down through
+  # this workflow (rlp lifecycle retire; rlp's docs/pipeline.md#teardown-runs).
+  workflow_dispatch:
+    inputs:
+      destroy-env:
+        description: AWS environment to tear down instead of running the pipeline
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -19,11 +39,22 @@ permissions:
 jobs:
   golden:
     # Pin both the workflow and the CLI to the same rlp commit.
-    uses: rdlucas2/rlp/.github/workflows/golden.yml@7c397bc82c6bdf58d7f57cde569ecac6a359fdc3
+    uses: rdlucas2/rlp/.github/workflows/golden.yml@e124a76b5dae131e27313bf83818c61c671c335a
     with:
-      rlp-version: "git:7c397bc82c6bdf58d7f57cde569ecac6a359fdc3"
+      rlp-version: "git:e124a76b5dae131e27313bf83818c61c671c335a"
+      deploy-env: ${{ vars.RLP_DEPLOY_ENV }}
+      aws-region: ${{ vars.RLP_AWS_REGION || 'us-east-1' }}
+      aws-plan-role-arn: ${{ vars.RLP_AWS_PLAN_ROLE_ARN }}
+      aws-deploy-role-arn: ${{ vars.RLP_AWS_DEPLOY_ROLE_ARN }}
+      tf-state-bucket: ${{ vars.RLP_TF_STATE_BUCKET }}
+      destroy-env: ${{ inputs.destroy-env || '' }}
+    secrets:
+      infracost-api-key: ${{ secrets.INFRACOST_API_KEY }}
+      # Reports go to the platform only when RLP_PLATFORM_URL is set too.
+      RLP_PLATFORM_TOKEN: ${{ secrets.RLP_PLATFORM_TOKEN }}
     permissions:
       contents: write          # publish: attach zips and jars to GitHub Releases
       packages: write          # publish: push images to GHCR
       security-events: write   # gates: upload SARIF to code scanning
       pull-requests: read      # gate-review: read the PR's reviews
+      id-token: write          # deploy and destroy: GitHub OIDC for AWS, used only when RLP_DEPLOY_ENV is set

@@ -34,7 +34,7 @@ Questions (see `copier.yml`):
 | `tests/` | pytest with JUnit XML and Cobertura coverage written to the paths `rlp.yaml` declares |
 | `Dockerfile` | Multi-stage build on a pinned `python:<version>-slim` base, running as a non-root user |
 | `.pre-commit-config.yaml`, `.yamllint.yaml`, `.editorconfig` | The rlp conventions |
-| `.github/workflows/pipeline.yml` | Calls the rlp golden pipeline, pinned to an rlp commit; runs on pull requests and on pull request reviews, so golden's `gate-review` re-checks when a review lands |
+| `.github/workflows/pipeline.yml` | Calls the rlp golden pipeline, pinned to an rlp commit; runs on pull requests and on pull request reviews, so golden's `gate-review` re-checks when a review lands. Deploys and reports to the rlp platform once the repo variables in its header are set, and takes `destroy-env` from a `workflow_dispatch` so the platform's retirement workflow can tear an environment down. A project created before that input existed needs `rlp update` (or the same edit by hand) before it can be retired |
 | `.github/CODEOWNERS` | Routes a change to a gate file (the paths the `rlp.agent` rules protect) to the `code_owners` for review |
 | `.copier-answers.yml` | Lets `rlp update` move the repo to a newer template version |
 
